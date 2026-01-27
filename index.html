@@ -223,8 +223,8 @@
 
     async function loadGames(){
       try{
-        const res = await fetch('games.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Impossibile leggere games.json');
+        const res = await fetch('game.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Impossibile leggere game.json');
         const games = await res.json();
 
         cardsEl.innerHTML = '';
@@ -250,3 +250,4 @@
   </script>
 </body>
 </html>
+
