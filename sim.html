@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MarketSim</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">MarketSim</div>
+    <div class="stats">
+      <div><span class="k">Anno</span> <span id="year" class="v"></span></div>
+      <div><span class="k">Cash</span> <span id="cash" class="v"></span></div>
+      <div><span class="k">Patrimonio</span> <span id="netWorth" class="v"></span></div>
+    </div>
+    <div class="actions">
+      <button id="btnAdvance" class="primary">Passa anno</button>
+      <button id="btnSave">Salva</button>
+      <button id="btnLoad">Carica</button>
+      <button id="btnReset" class="danger">Reset</button>
+    </div>
+  </header>
+
+  <main class="grid">
+    <section class="card">
+      <h2>Compra / Vendi</h2>
+      <div class="row">
+        <label>Settore</label>
+        <select id="assetSelect"></select>
+      </div>
+
+      <div class="row">
+        <label>Quantità</label>
+        <input id="qty" type="number" min="1" step="1" value="1" />
+      </div>
+
+      <div class="row buttons">
+        <button id="btnBuy">Compra</button>
+        <button id="btnSell">Vendi</button>
+      </div>
+
+      <div id="tradeMsg" class="msg"></div>
+      <div class="hint">Suggerimento: usa Passa anno per far muovere il mercato.</div>
+    </section>
+
+    <section class="card">
+      <h2>Prezzi</h2>
+      <div id="prices" class="prices"></div>
+    </section>
+
+    <section class="card">
+      <h2>Portafoglio</h2>
+      <div id="portfolio"></div>
+    </section>
+
+    <section class="card">
+      <h2>News</h2>
+      <div id="news"></div>
+    </section>
+
+    <section class="card wide">
+      <h2>Log</h2>
+      <div id="log" class="log"></div>
+    </section>
+    <section class="card">
+  <h2>Corsa cavalli</h2>
+
+  <div class="row">
+    <label for="horseSel">Cavallo</label>
+    <select id="horseSel"></select>
+  </div>
+
+  <div class="row">
+    <label for="horseBet">Puntata</label>
+    <input id="horseBet" type="number" min="1" step="1" value="100" />
+  </div>
+
+  <div class="row buttons">
+    <button id="btnHorseRace" class="primary">Corri</button>
+  </div>
+
+  <div id="horseMsg" class="msg"></div>
+
+  <div class="track" id="horseTrack"></div>
+</section>
+<section class="card wide">
+  <h2>Orto</h2>
+  <div class="ortoWrap">
+    <div id="ortoGrid" class="ortoGrid"></div>
+
+    <div class="ortoSide">
+      <div class="row">
+        <label for="seedSel">Semi</label>
+        <select id="seedSel"></select>
+      </div>
+      <div id="seedInfo" class="small"></div>
+      <div class="small hint">Clicca una casella vuota per piantare. Clicca fuori per deselezionare.</div>
+      <div class="small hint">Clicca una pianta matura per raccogliere.</div>
+    </div>
+  </div>
+</section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+<div id="chartModal" class="modal hidden">
+  <div class="modalCard">
+    <div class="modalHeader">
+      <div><b id="chartTitle">Andamento</b></div>
+      <button id="btnCloseModal" type="button">Chiudi</button>
+    </div>
+    <canvas id="chartCanvas" width="800" height="300"></canvas>
+    <div class="small" id="chartHint">Clicca sui settori nel pannello prezzi per vedere il grafico.</div>
+  </div>
+</div>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Giochi</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --text:#e8ecff;
+      --muted:#a9b2da;
+      --accent:#6aa7ff;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, rgba(106,167,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(98,211,138,.12), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      padding:18px;
+      display:flex;
+      justify-content:center;
+    }
+    .wrap{
+      width:min(1100px, 100%);
+      display:grid;
+      gap:14px;
+    }
+    header{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    h1{ margin:0; font-size:20px; letter-spacing:.3px; }
+    .sub{ margin:4px 0 0 0; color:var(--muted); font-size:13px; }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap:14px;
+    }
+    @media (min-width: 860px){
+      .grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:grid;
+      grid-template-rows: auto 1fr;
+    }
+    .cardTop{
+      padding:14px 14px 10px 14px;
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .cardTop h2{
+      margin:0;
+      font-size:16px;
+    }
+    .desc{
+      margin:6px 0 0 0;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .btn{
+      text-decoration:none;
+      color:var(--text);
+      font-size:13px;
+      font-family:var(--mono);
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn.primary{
+      background: linear-gradient(180deg, rgba(106,167,255,.30), rgba(106,167,255,.15));
+      border-color: rgba(106,167,255,.35);
+    }
+
+    /* “pre-render”: iframe con overlay cliccabile */
+    .previewWrap{
+      position:relative;
+      padding:14px;
+    }
+    .preview{
+      width:100%;
+      aspect-ratio: 16/10;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.25);
+      overflow:hidden;
+    }
+    .preview iframe{
+      width:100%;
+      height:100%;
+      border:0;
+      display:block;
+      background: #000;
+    }
+    /* disabilita interazione dentro l’iframe, così clicchi la card */
+    .preview iframe{ pointer-events:none; }
+
+    .clickOverlay{
+      position:absolute;
+      inset:14px;
+      border-radius: 14px;
+      cursor:pointer;
+      background: linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.20));
+      opacity:0;
+      transition: opacity .15s ease;
+    }
+    .previewWrap:hover .clickOverlay{ opacity:1; }
+    .tag{
+      position:absolute;
+      left:24px;
+      top:24px;
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.35);
+      color:var(--text);
+      pointer-events:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Home Giochini</h1>
+        <p class="sub">Seleziona un gioco. Le anteprime sono “pre-renderizzate” via iframe.</p>
+      </div>
+      <span class="pill" id="countPill">Caricamento…</span>
+    </header>
+
+    <section class="grid" id="cards"></section>
+  </div>
+
+  <script>
+    const cardsEl = document.getElementById('cards');
+    const countPill = document.getElementById('countPill');
+
+    function cardTemplate(game){
+      const div = document.createElement('div');
+      div.className = 'card';
+
+      div.innerHTML = `
+        <div class="cardTop">
+          <div>
+            <h2>${escapeHtml(game.title || game.file)}</h2>
+            <p class="desc">${escapeHtml(game.desc || '')}</p>
+          </div>
+          <div class="actions">
+            <a class="btn primary" href="${encodeURI(game.file)}">Apri</a>
+            <a class="btn" href="${encodeURI(game.file)}" target="_blank" rel="noopener">Nuova scheda</a>
+          </div>
+        </div>
+
+        <div class="previewWrap">
+          <div class="preview">
+            <iframe loading="lazy" src="${encodeURI(game.file)}"></iframe>
+          </div>
+          <div class="tag">Anteprima</div>
+          <a class="clickOverlay" href="${encodeURI(game.file)}" aria-label="Apri gioco"></a>
+        </div>
+      `;
+      return div;
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+
+    async function loadGames(){
+      try{
+        const res = await fetch('games.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('Impossibile leggere games.json');
+        const games = await res.json();
+
+        cardsEl.innerHTML = '';
+        games.forEach(g => cardsEl.appendChild(cardTemplate(g)));
+
+        countPill.textContent = `${games.length} giochi`;
+      }catch(err){
+        countPill.textContent = 'Errore';
+        cardsEl.innerHTML = `
+          <div class="card" style="padding:14px">
+            <h2 style="margin:0 0 8px 0">Non riesco a caricare games.json</h2>
+            <p class="desc" style="margin:0">
+              Se stai aprendo index.html con doppio click (file://), alcuni browser bloccano fetch locale.
+              Soluzione: apri con un piccolo server locale oppure usa la versione “manuale” (lista hardcoded).
+            </p>
+          </div>
+        `;
+        console.error(err);
+      }
+    }
+
+    loadGames();
+  </script>
+</body>
+</html>

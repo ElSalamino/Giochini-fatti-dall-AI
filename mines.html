@@ -1,0 +1,713 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prato Fiorito</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --text:#e8ecff;
+      --muted:#a9b2da;
+      --accent:#6aa7ff;
+      --danger:#ff5b6a;
+      --ok:#62d38a;
+      --warn:#ffd28f;
+
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, rgba(106,167,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(98,211,138,.12), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .app{
+      width:min(980px, 100%);
+      display:grid;
+      gap:14px;
+    }
+    .topbar{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .title{
+      display:flex;
+      align-items:baseline;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .title h1{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.3px;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .controls{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    select, button{
+      font:inherit;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:10px 12px;
+      outline:none;
+    }
+    select{padding-right:36px}
+    button{
+      cursor:pointer;
+      background: linear-gradient(180deg, rgba(106,167,255,.30), rgba(106,167,255,.15));
+      border-color: rgba(106,167,255,.35);
+      user-select:none;
+    }
+    button.secondary{
+      background: rgba(0,0,0,.18);
+      border-color: rgba(255,255,255,.12);
+    }
+    button:active{ transform: translateY(1px); }
+
+    .stats{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      font-family:var(--mono);
+      font-size:13px;
+    }
+    .stat{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .stat b{font-weight:800}
+    .stat .bad{ color: var(--danger); }
+    .stat .ok{ color: var(--ok); }
+
+    .main{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:grid;
+      gap:12px;
+      justify-items:center;
+    }
+
+    .boardWrap{
+      width:min(920px, 100%);
+      overflow:auto;
+      padding:8px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.10);
+    }
+
+    .board{
+      display:grid;
+      gap:2px;
+      background: rgba(255,255,255,.06);
+      padding:2px;
+      border-radius: 12px;
+      user-select:none;
+      touch-action: manipulation;
+    }
+
+    .cell{
+      width: 34px;
+      height: 34px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family: var(--mono);
+      font-size: 15px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.06);
+      background: linear-gradient(180deg, rgba(21,31,63,.95), rgba(16,24,54,.95));
+      color: rgba(232,236,255,.95);
+      cursor:pointer;
+      position:relative;
+    }
+
+    .cell.revealed{
+      cursor:default;
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border-color: rgba(255,255,255,.10);
+    }
+
+    /* NEW: numero "sicuro" (flag vicine == numero) diventa giallo */
+    .cell.revealed.safe{
+      background: linear-gradient(180deg, rgba(255,210,143,.22), rgba(255,210,143,.10));
+      border-color: rgba(255,210,143,.38);
+      box-shadow: inset 0 0 0 2px rgba(255,210,143,.12);
+    }
+
+    .cell.flagged::after{
+      content:"⚑";
+      font-size: 18px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .cell.mine.revealed{
+      background: linear-gradient(180deg, rgba(255,91,106,.28), rgba(255,91,106,.12));
+      border-color: rgba(255,91,106,.35);
+    }
+
+    .cell.mine.revealed::after{
+      content:"✹";
+      font-size: 18px;
+      color: rgba(255,255,255,.92);
+    }
+
+    .hint{
+      font-family:var(--mono);
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      line-height:1.35;
+      max-width: 920px;
+    }
+
+    /* numeri */
+    .n1{ color: #a8d1ff; }
+    .n2{ color: #8ff0b8; }
+    .n3{ color: #ffb3bb; }
+    .n4{ color: #c7b7ff; }
+    .n5{ color: #ffd28f; }
+    .n6{ color: #88f1ff; }
+    .n7{ color: #ffffff; }
+    .n8{ color: #d7d7d7; }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:999;
+    }
+    .overlay.show{display:flex}
+    .modal{
+      width:min(520px, 100%);
+      background: linear-gradient(180deg, rgba(18,26,51,.98), rgba(11,16,32,.98));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .modal h2{margin:0 0 8px 0; font-size:18px}
+    .modal p{margin:0 0 14px 0; color:var(--muted); line-height:1.35}
+    .modal .actions{display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap}
+
+    @media (max-width: 520px){
+      .cell{ width: 30px; height: 30px; font-size: 14px; border-radius: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>Prato Fiorito</h1>
+        <span class="pill" id="statusPill">Pronto</span>
+      </div>
+
+      <div class="controls">
+        <select id="difficulty">
+          <option value="easy">Facile (9×9)</option>
+          <option value="medium" selected>Medio (16×16)</option>
+          <option value="hard">Difficile (24×16)</option>
+          <option value="super_hard">Difficile (24×26)</option>
+          
+        </select>
+        <button id="newBtn">Nuova partita</button>
+        <button id="resetBtn" class="secondary">Reset</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat">Tempo: <b id="timer">00:00</b></div>
+        <div class="stat">Mine: <b class="bad" id="minesLeft">0</b></div>
+        <div class="stat">Scoperte: <b class="ok" id="revealed">0</b></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="boardWrap">
+        <div class="board" id="board" aria-label="Griglia Prato Fiorito"></div>
+      </div>
+      <div class="hint">
+        Click/Tap: scopri · Tasto destro (o pressione lunga): bandierina · Primo click sempre sicuro ·
+        Celle vuote si aprono a cascata · Click su numero giallo: apre le celle vicine (anche se le bandierine sono sbagliate).
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modalTitle">—</h2>
+      <p id="modalText">—</p>
+      <div class="actions" id="modalActions">
+        <button id="modalNew" class="primary">Nuova partita</button>
+        <button id="modalClose" class="secondary">Chiudi</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  const boardEl = document.getElementById('board');
+  const difficultyEl = document.getElementById('difficulty');
+  const newBtn = document.getElementById('newBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const statusPill = document.getElementById('statusPill');
+
+  const timerEl = document.getElementById('timer');
+  const minesLeftEl = document.getElementById('minesLeft');
+  const revealedEl = document.getElementById('revealed');
+
+  const overlay = document.getElementById('overlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalText = document.getElementById('modalText');
+  const modalNew = document.getElementById('modalNew');
+  const modalClose = document.getElementById('modalClose');
+
+  const DIFF = {
+    easy:   { w: 9,  h: 9,  mines: 10, label: 'Facile' },
+    medium: { w: 16, h: 16, mines: 40, label: 'Medio'  },
+    hard:   { w: 24, h: 16, mines: 80, label: 'Difficile' },
+    super_hard:{ w: 24, h: 24, mines: 120, label: 'Super Difficile' },
+  };
+
+  let W=0, H=0, MINES=0;
+  let grid = null;
+  let firstClickDone = false;
+  let gameOver = false;
+  let won = false;
+
+  let timerId = null;
+  let startMs = null;
+  let elapsedMs = 0;
+
+  let revealedCount = 0;
+  let flaggedCount = 0;
+
+  function showOverlay(title, text){
+    modalTitle.textContent = title;
+    modalText.textContent = text;
+    overlay.classList.add('show');
+  }
+  function hideOverlay(){ overlay.classList.remove('show'); }
+  function setStatus(s){ statusPill.textContent = s; }
+
+  function formatTime(ms){
+    const total = Math.floor(ms / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function stopTimer(){
+    if (timerId){ clearInterval(timerId); timerId = null; }
+    startMs = null;
+  }
+  function startTimer(){
+    stopTimer();
+    startMs = Date.now();
+    timerId = setInterval(() => {
+      elapsedMs = Date.now() - startMs;
+      timerEl.textContent = formatTime(elapsedMs);
+    }, 250);
+  }
+  function resetTimer(){
+    stopTimer();
+    elapsedMs = 0;
+    timerEl.textContent = '00:00';
+  }
+
+  function inBounds(x,y){ return x>=0 && y>=0 && x<W && y<H; }
+  function idx(x,y){ return y*W + x; }
+
+  function neighbors(x,y){
+    const out = [];
+    for (let dy=-1; dy<=1; dy++){
+      for (let dx=-1; dx<=1; dx++){
+        if (dx===0 && dy===0) continue;
+        const nx=x+dx, ny=y+dy;
+        if (inBounds(nx,ny)) out.push([nx,ny]);
+      }
+    }
+    return out;
+  }
+
+  function buildEmptyGrid(){
+    grid = Array.from({length: W*H}, (_, i) => ({
+      x: i%W,
+      y: Math.floor(i/W),
+      mine: false,
+      revealed: false,
+      flagged: false,
+      n: 0,
+      el: null
+    }));
+  }
+
+  function buildBoardDOM(){
+    boardEl.innerHTML = '';
+    boardEl.style.gridTemplateColumns = `repeat(${W}, 1fr)`;
+
+    for (const cell of grid){
+      const el = document.createElement('div');
+      el.className = 'cell';
+      el.dataset.x = String(cell.x);
+      el.dataset.y = String(cell.y);
+
+      // click: reveal OR chord on "safe" number
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        onCellClick(cell.x, cell.y);
+      });
+
+      // right click: flag (desktop)
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        onToggleFlag(cell.x, cell.y);
+      });
+
+      // long press: flag (touch)
+      let pressT = null;
+      el.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'touch') return;
+        pressT = setTimeout(() => {
+          pressT = null;
+          onToggleFlag(cell.x, cell.y);
+        }, 420);
+      });
+      el.addEventListener('pointerup', () => {
+        if (pressT){ clearTimeout(pressT); pressT = null; }
+      });
+      el.addEventListener('pointercancel', () => {
+        if (pressT){ clearTimeout(pressT); pressT = null; }
+      });
+      el.addEventListener('pointerleave', () => {
+        if (pressT){ clearTimeout(pressT); pressT = null; }
+      });
+
+      cell.el = el;
+      boardEl.appendChild(el);
+    }
+  }
+
+  function placeMinesAvoiding(safeX, safeY){
+    const safeSet = new Set();
+    safeSet.add(idx(safeX, safeY));
+    for (const [nx,ny] of neighbors(safeX, safeY)) safeSet.add(idx(nx,ny));
+
+    const candidates = [];
+    for (let y=0; y<H; y++){
+      for (let x=0; x<W; x++){
+        const id = idx(x,y);
+        if (!safeSet.has(id)) candidates.push(id);
+      }
+    }
+
+    for (let i=candidates.length-1; i>0; i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [candidates[i], candidates[j]] = [candidates[j], candidates[i]];
+    }
+
+    for (let i=0; i<MINES; i++){
+      const id = candidates[i];
+      grid[id].mine = true;
+    }
+
+    for (const cell of grid){
+      if (cell.mine) { cell.n = -1; continue; }
+      let count = 0;
+      for (const [nx,ny] of neighbors(cell.x, cell.y)){
+        if (grid[idx(nx,ny)].mine) count++;
+      }
+      cell.n = count;
+    }
+  }
+
+  function renderCell(cell){
+    const el = cell.el;
+    el.classList.toggle('revealed', cell.revealed);
+    el.classList.toggle('flagged', cell.flagged);
+    el.classList.toggle('mine', cell.mine);
+
+    // safe highlight computed elsewhere; keep class unless resetAllSafe()
+    if (!cell.revealed){
+      el.textContent = '';
+      el.classList.remove('n1','n2','n3','n4','n5','n6','n7','n8');
+      return;
+    }
+
+    if (cell.mine){
+      el.textContent = '';
+      el.classList.remove('n1','n2','n3','n4','n5','n6','n7','n8');
+      return;
+    }
+
+    if (cell.n === 0){
+      el.textContent = '';
+      el.classList.remove('n1','n2','n3','n4','n5','n6','n7','n8');
+      return;
+    }
+
+    el.textContent = String(cell.n);
+    el.classList.remove('n1','n2','n3','n4','n5','n6','n7','n8');
+    el.classList.add('n'+cell.n);
+  }
+
+  function updateHUD(){
+    minesLeftEl.textContent = String(Math.max(0, MINES - flaggedCount));
+    revealedEl.textContent = String(revealedCount);
+  }
+
+  function countFlaggedNeighbors(x,y){
+    let c = 0;
+    for (const [nx,ny] of neighbors(x,y)){
+      if (grid[idx(nx,ny)].flagged) c++;
+    }
+    return c;
+  }
+
+  // NEW: aggiorna "sicuro" (giallo) su tutti i numeri rivelati
+  function refreshSafeNumbers(){
+    for (const cell of grid){
+      if (!cell.revealed || cell.mine || cell.n <= 0) {
+        cell.el.classList.remove('safe');
+        continue;
+      }
+      const f = countFlaggedNeighbors(cell.x, cell.y);
+      cell.el.classList.toggle('safe', f === cell.n);
+    }
+  }
+
+  function revealFloodFill(startX, startY){
+    const q = [[startX, startY]];
+    const seen = new Set();
+
+    while (q.length){
+      const [x,y] = q.shift();
+      const id = idx(x,y);
+      if (seen.has(id)) continue;
+      seen.add(id);
+
+      const cell = grid[id];
+      if (cell.revealed || cell.flagged) continue;
+      if (cell.mine) continue;
+
+      cell.revealed = true;
+      revealedCount++;
+      renderCell(cell);
+
+      if (cell.n === 0){
+        for (const [nx,ny] of neighbors(x,y)){
+          const ncell = grid[idx(nx,ny)];
+          if (!ncell.revealed && !ncell.flagged && !ncell.mine){
+            q.push([nx,ny]);
+          }
+        }
+      }
+    }
+  }
+
+  function revealAllMines(){
+    for (const cell of grid){
+      if (cell.mine){
+        cell.revealed = true;
+        cell.flagged = false;
+        renderCell(cell);
+      }
+    }
+  }
+
+  function endLoss(){
+    gameOver = true;
+    stopTimer();
+    setStatus('Game Over');
+    revealAllMines();
+    refreshSafeNumbers();
+    showOverlay('Game Over', `Hai colpito una mina. Tempo: ${timerEl.textContent}.`);
+  }
+
+  function checkWin(){
+    const totalSafe = W*H - MINES;
+    if (revealedCount >= totalSafe){
+      won = true;
+      gameOver = true;
+      stopTimer();
+      setStatus('Completato');
+      refreshSafeNumbers();
+      showOverlay('Completato', `Hai vinto in ${timerEl.textContent}.`);
+    }
+  }
+
+  function onReveal(x,y){
+    if (gameOver) return;
+
+    const cell = grid[idx(x,y)];
+    if (cell.revealed || cell.flagged) return;
+
+    if (!firstClickDone){
+      firstClickDone = true;
+      placeMinesAvoiding(x,y);
+      setStatus(`${DIFF[difficultyEl.value].label} • In corso`);
+      startTimer();
+    }
+
+    if (cell.mine){
+      cell.revealed = true;
+      revealedCount++;
+      renderCell(cell);
+      updateHUD();
+      endLoss();
+      return;
+    }
+
+    revealFloodFill(x,y);
+    updateHUD();
+    refreshSafeNumbers();
+    checkWin();
+  }
+
+  // NEW: click su numero "sicuro" (giallo) apre le celle vicine non segnate.
+  // Se le bandierine sono sbagliate, può esplodere (come richiesto).
+  function chordOpen(x,y){
+    const cell = grid[idx(x,y)];
+    if (!cell.revealed || cell.mine || cell.n <= 0) return;
+
+    // apri tutte le adiacenti NON flaggate e NON rivelate
+    for (const [nx,ny] of neighbors(x,y)){
+      const ncell = grid[idx(nx,ny)];
+      if (ncell.revealed || ncell.flagged) continue;
+
+      if (ncell.mine){
+        // boom
+        ncell.revealed = true;
+        revealedCount++;
+        renderCell(ncell);
+        updateHUD();
+        endLoss();
+        return;
+      }
+
+      revealFloodFill(nx, ny);
+    }
+
+    updateHUD();
+    refreshSafeNumbers();
+    checkWin();
+  }
+
+  // Click dispatcher: se clicchi su un numero "sicuro" fai chord, altrimenti reveal normale
+  function onCellClick(x,y){
+    if (gameOver) return;
+    const cell = grid[idx(x,y)];
+
+    if (cell.revealed && !cell.mine && cell.n > 0){
+      // "sicuro" = numero soddisfatto dal conteggio bandierine (giuste o no)
+      const f = countFlaggedNeighbors(x,y);
+      if (f === cell.n){
+        chordOpen(x,y);
+      }
+      return;
+    }
+
+    onReveal(x,y);
+  }
+
+  function onToggleFlag(x,y){
+    if (gameOver) return;
+
+    // non permettere bandiere prima del primo click? (qui: consentito)
+    const cell = grid[idx(x,y)];
+    if (cell.revealed) return;
+
+    cell.flagged = !cell.flagged;
+    flaggedCount += cell.flagged ? 1 : -1;
+    renderCell(cell);
+    updateHUD();
+
+    // NEW: ogni bandierina aggiorna i numeri "sicuri" (gialli)
+    refreshSafeNumbers();
+  }
+
+  function newGame(){
+    const d = DIFF[difficultyEl.value] || DIFF.medium;
+    W = d.w; H = d.h; MINES = d.mines;
+
+    firstClickDone = false;
+    gameOver = false;
+    won = false;
+
+    revealedCount = 0;
+    flaggedCount = 0;
+
+    resetTimer();
+    setStatus(`${d.label} • Pronto (primo click sicuro)`);
+
+    buildEmptyGrid();
+    buildBoardDOM();
+
+    for (const cell of grid) renderCell(cell);
+    refreshSafeNumbers();
+    updateHUD();
+    hideOverlay();
+  }
+
+  function resetBoard(){
+    newGame();
+  }
+
+  newBtn.addEventListener('click', newGame);
+  resetBtn.addEventListener('click', resetBoard);
+
+  modalNew.addEventListener('click', () => { hideOverlay(); newGame(); });
+  modalClose.addEventListener('click', hideOverlay);
+
+  newGame();
+})();
+</script>
+</body>
+</html>

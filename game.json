@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Sudoku",
+    "file": "sudoku.html",
+    "desc": "Sudoku classico: difficoltà, timer, 3 errori, highlight riga/colonna e numeri uguali."
+  },
+  {
+    "title": "2054",
+    "file": "2054.html",
+    "desc": "Stile 2048: tasti freccia/WASD + pulsanti direzionali."
+  },
+  {
+    "title": "Market Sim",
+    "file": "sim.html",
+    "desc": "Simula un mercato azionario con azioni e corse dei cavalli, c'è anche un orto."
+  },
+  {
+    "title": "Arkanoid",
+    "file": "arkanoid.html",
+    "desc": "Classico rompi mattoncini"
+  }
+  
+]
