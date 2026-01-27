@@ -3,65 +3,167 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Giochi</title>
+  <meta name="color-scheme" content="dark light" />
+  <title>Home Giochini</title>
   <style>
     :root{
       --bg:#0b1020;
       --panel:#121a33;
+      --panel2:#0f1730;
       --text:#e8ecff;
       --muted:#a9b2da;
+      --border:rgba(255,255,255,.10);
+      --shadow: 0 14px 40px rgba(0,0,0,.38);
+      --radius:18px;
+      --radius2:14px;
       --accent:#6aa7ff;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 16px;
-      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      --accent2:#62d38a;
+      --warn:#ffcc66;
+      --bad:#ff6a6a;
+      --ok:#62d38a;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      min-height:100vh;
-      background:
-        radial-gradient(1000px 600px at 10% 0%, rgba(106,167,255,.18), transparent 60%),
-        radial-gradient(900px 500px at 90% 10%, rgba(98,211,138,.12), transparent 60%),
-        var(--bg);
-      color:var(--text);
       font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1100px 650px at 10% 0%, rgba(106,167,255,.18), transparent 60%),
+        radial-gradient(900px 540px at 90% 10%, rgba(98,211,138,.14), transparent 60%),
+        radial-gradient(1000px 600px at 60% 120%, rgba(255,204,102,.10), transparent 55%),
+        var(--bg);
       padding:18px;
       display:flex;
       justify-content:center;
+      align-items:flex-start;
     }
+    a{color:inherit}
     .wrap{
-      width:min(1100px, 100%);
+      width:min(1150px, 100%);
       display:grid;
       gap:14px;
     }
+
     header{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       padding:16px;
+      display:grid;
+      gap:12px;
+    }
+    .topline{
       display:flex;
       align-items:flex-end;
       justify-content:space-between;
       gap:12px;
       flex-wrap:wrap;
     }
-    h1{ margin:0; font-size:20px; letter-spacing:.3px; }
-    .sub{ margin:4px 0 0 0; color:var(--muted); font-size:13px; }
+    h1{margin:0; font-size:20px; letter-spacing:.3px;}
+    .sub{margin:6px 0 0 0; color:var(--muted); font-size:13px; line-height:1.4;}
     .pill{
       font-family:var(--mono);
       font-size:12px;
       color:var(--muted);
       padding:6px 10px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid var(--border);
       background: rgba(0,0,0,.18);
+      white-space:nowrap;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .leftControls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      min-width:min(100%, 760px);
+      flex: 1 1 520px;
+    }
+    .field{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex: 1 1 360px;
+      min-width:260px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    .field input{
+      width:100%;
+      background:transparent;
+      border:0;
+      outline:none;
+      color:var(--text);
+      font-size:14px;
+    }
+    .field .icon{
+      width:18px; height:18px;
+      opacity:.9;
+      flex:0 0 auto;
+    }
+    .toggles{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .toggle{
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      user-select:none;
+      cursor:pointer;
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+    }
+    .toggle input{display:none}
+    .switch{
+      width:38px;
+      height:22px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      position:relative;
+      flex:0 0 auto;
+    }
+    .knob{
+      position:absolute;
+      top:50%;
+      transform: translateY(-50%);
+      left:2px;
+      width:18px;
+      height:18px;
+      border-radius:50%;
+      background: rgba(255,255,255,.22);
+      transition: left .18s ease, background .18s ease;
+    }
+    .toggle input:checked + .switch .knob{
+      left:18px;
+      background: rgba(106,167,255,.65);
     }
 
     .grid{
       display:grid;
-      grid-template-columns: repeat(1, 1fr);
+      grid-template-columns: 1fr;
       gap:14px;
     }
     @media (min-width: 860px){
@@ -69,36 +171,69 @@
     }
 
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border: 1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow:hidden;
       display:grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows:auto 1fr;
     }
     .cardTop{
       padding:14px 14px 10px 14px;
       display:flex;
-      align-items:baseline;
+      align-items:flex-start;
       justify-content:space-between;
       gap:10px;
       flex-wrap:wrap;
     }
-    .cardTop h2{
-      margin:0;
-      font-size:16px;
+    .titleRow{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(255,255,255,.15);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 0 0 2px rgba(0,0,0,.10) inset;
+      flex:0 0 auto;
+    }
+    .dot.ok{ background: rgba(98,211,138,.75); border-color: rgba(98,211,138,.85); }
+    .dot.bad{ background: rgba(255,106,106,.75); border-color: rgba(255,106,106,.85); }
+    .dot.warn{ background: rgba(255,204,102,.80); border-color: rgba(255,204,102,.95); }
+
+    .cardTop h2{ margin:0; font-size:16px; letter-spacing:.2px; }
+    .meta{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-top:6px;
+    }
+    .chip{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      white-space:nowrap;
     }
     .desc{
-      margin:6px 0 0 0;
+      margin:8px 0 0 0;
       color:var(--muted);
       font-size:13px;
       line-height:1.35;
+      max-width: 60ch;
     }
     .actions{
       display:flex;
       gap:10px;
       align-items:center;
+      flex-wrap:wrap;
     }
     .btn{
       text-decoration:none;
@@ -107,109 +242,184 @@
       font-family:var(--mono);
       padding:10px 12px;
       border-radius: 12px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid var(--border);
       background: rgba(0,0,0,.18);
       display:inline-flex;
       align-items:center;
       gap:8px;
       cursor:pointer;
       user-select:none;
+      line-height:1;
     }
     .btn.primary{
       background: linear-gradient(180deg, rgba(106,167,255,.30), rgba(106,167,255,.15));
       border-color: rgba(106,167,255,.35);
     }
-
-    /* “pre-render”: iframe con overlay cliccabile */
-    .previewWrap{
-      position:relative;
-      padding:14px;
+    .btn.ghost{
+      background: transparent;
     }
+    .btn:active{ transform: translateY(1px); }
+
+    .previewWrap{
+      padding:0 14px 14px 14px;
+      display:none;
+    }
+    .previewWrap.on{ display:block; }
     .preview{
       width:100%;
       aspect-ratio: 16/10;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.25);
+      border-radius: var(--radius2);
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.22);
       overflow:hidden;
+      position:relative;
     }
     .preview iframe{
       width:100%;
       height:100%;
       border:0;
       display:block;
-      background: #000;
+      background:#000;
     }
-    /* disabilita interazione dentro l’iframe, così clicchi la card */
-    .preview iframe{ pointer-events:none; }
-
-    .clickOverlay{
+    .preview iframe{ pointer-events:none; } /* click solo sui bottoni */
+    .previewBadge{
       position:absolute;
-      inset:14px;
-      border-radius: 14px;
-      cursor:pointer;
-      background: linear-gradient(180deg, rgba(0,0,0,.00), rgba(0,0,0,.20));
-      opacity:0;
-      transition: opacity .15s ease;
-    }
-    .previewWrap:hover .clickOverlay{ opacity:1; }
-    .tag{
-      position:absolute;
-      left:24px;
-      top:24px;
-      font-family:var(--mono);
-      font-size:12px;
+      left:12px;
+      top:12px;
       padding:6px 10px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.10);
+      border:1px solid var(--border);
       background: rgba(0,0,0,.35);
+      font-family:var(--mono);
+      font-size:12px;
       color:var(--text);
-      pointer-events:none;
+    }
+
+    .empty{
+      padding:14px;
+      border-radius: var(--radius);
+      border:1px dashed rgba(255,255,255,.16);
+      color:var(--muted);
+      background: rgba(0,0,0,.12);
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    footer{
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
+      padding:8px 0 18px 0;
+    }
+    footer .mono{ font-family:var(--mono); }
+
+    .kbd{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:3px 7px;
+      border-radius:9px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.20);
+      color:var(--text);
     }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
-      <div>
-        <h1>Home Giochini</h1>
-        <p class="sub">Seleziona un gioco. Le anteprime sono “pre-renderizzate” via iframe.</p>
+      <div class="topline">
+        <div>
+          <h1>Home Giochini</h1>
+          <p class="sub">
+            Una raccolta di mini-giochi in HTML. Cerca, apri e (se vuoi) attiva le anteprime.
+          </p>
+        </div>
+        <span class="pill" id="countPill">Caricamento…</span>
       </div>
-      <span class="pill" id="countPill">Caricamento…</span>
+
+      <div class="controls">
+        <div class="leftControls">
+          <div class="field">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z" stroke="currentColor" stroke-width="1.6" opacity=".9"/>
+              <path d="M16.5 16.5 21 21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity=".9"/>
+            </svg>
+            <input id="search" type="search" placeholder="Cerca un gioco (es. arkanoid, mines, sim…)" autocomplete="off" />
+          </div>
+
+          <label class="toggle" title="Mostra le anteprime (iframe). Può pesare su PC lenti.">
+            <input id="togglePreview" type="checkbox" />
+            <span class="switch"><span class="knob"></span></span>
+            Anteprime
+          </label>
+
+          <label class="toggle" title="Mostra anche giochi che risultano mancanti (404).">
+            <input id="toggleMissing" type="checkbox" />
+            <span class="switch"><span class="knob"></span></span>
+            Mostra mancanti
+          </label>
+        </div>
+
+        <div class="toggles">
+          <span class="pill" id="sourcePill">Catalogo: …</span>
+          <span class="pill" title="Shortcut"><span class="kbd">/</span> per cercare</span>
+        </div>
+      </div>
     </header>
 
     <section class="grid" id="cards"></section>
+
+    <div id="empty" class="empty" style="display:none;">
+      Nessun gioco trovato con questi filtri.
+    </div>
+
+    <footer>
+      <span class="mono">GitHub Pages</span> ready — percorsi relativi, nessuna dipendenza esterna.
+    </footer>
   </div>
 
   <script>
     const cardsEl = document.getElementById('cards');
     const countPill = document.getElementById('countPill');
+    const sourcePill = document.getElementById('sourcePill');
+    const searchEl = document.getElementById('search');
+    const togglePreviewEl = document.getElementById('togglePreview');
+    const toggleMissingEl = document.getElementById('toggleMissing');
+    const emptyEl = document.getElementById('empty');
 
-    function cardTemplate(game){
-      const div = document.createElement('div');
-      div.className = 'card';
+    // Fallback (in caso game.json manchi o venga bloccato in file://)
+    const FALLBACK_GAMES = [
+      { title: "2048", file: "2048.html", desc: "Stile 2048: frecce/WASD + mobile." },
+      { title: "Arkanoid", file: "arkanoid.html", desc: "Classico rompi-mattoncini." },
+      { title: "Galaga", file: "galaga.html", desc: "Arcade shooter in stile Galaga." },
+      { title: "Prato Fiorito", file: "mines.html", desc: "Minesweeper: bandierine, pulizia area, ecc." },
+      { title: "Market Sim", file: "sim.html", desc: "Simulatore di mercato con varie modalità." },
+      { title: "Prova", file: "prova.html", desc: "Pagina di test." }
+    ];
 
-      div.innerHTML = `
-        <div class="cardTop">
-          <div>
-            <h2>${escapeHtml(game.title || game.file)}</h2>
-            <p class="desc">${escapeHtml(game.desc || '')}</p>
-          </div>
-          <div class="actions">
-            <a class="btn primary" href="${encodeURI(game.file)}">Apri</a>
-            <a class="btn" href="${encodeURI(game.file)}" target="_blank" rel="noopener">Nuova scheda</a>
-          </div>
-        </div>
+    // Piccole correzioni note (puoi estendere la mappa quando rinomini file)
+    const FILE_ALIASES = {
+      "2054.html": "2048.html"
+    };
 
-        <div class="previewWrap">
-          <div class="preview">
-            <iframe loading="lazy" src="${encodeURI(game.file)}"></iframe>
-          </div>
-          <div class="tag">Anteprima</div>
-          <a class="clickOverlay" href="${encodeURI(game.file)}" aria-label="Apri gioco"></a>
-        </div>
-      `;
-      return div;
+    const TAGS_BY_FILE = {
+      "2048.html": ["Puzzle"],
+      "sudoku.html": ["Puzzle"],
+      "mines.html": ["Puzzle"],
+      "arkanoid.html": ["Arcade"],
+      "galaga.html": ["Arcade"],
+      "sim.html": ["Sim"],
+      "prova.html": ["Altro"]
+    };
+
+    function normGame(g){
+      const title = (g?.title ?? g?.name ?? g?.file ?? "Gioco").toString().trim();
+      let file = (g?.file ?? g?.href ?? "").toString().trim();
+      if (FILE_ALIASES[file]) file = FILE_ALIASES[file];
+      const desc = (g?.desc ?? g?.description ?? "").toString().trim();
+      const tags = TAGS_BY_FILE[file] ?? [];
+      return { title, file, desc, tags, availability: "unknown" };
     }
 
     function escapeHtml(s){
@@ -221,33 +431,171 @@
         .replaceAll("'","&#039;");
     }
 
-    async function loadGames(){
+    function uniqByFile(list){
+      const seen = new Set();
+      const out = [];
+      for (const g of list){
+        if (!g.file) continue;
+        const key = g.file.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(g);
+      }
+      return out;
+    }
+
+    async function loadCatalog(){
+      // Prova a leggere game.json (coerente col file caricato)
       try{
         const res = await fetch('game.json', { cache: 'no-store' });
-        if (!res.ok) throw new Error('Impossibile leggere game.json');
-        const games = await res.json();
-
-        cardsEl.innerHTML = '';
-        games.forEach(g => cardsEl.appendChild(cardTemplate(g)));
-
-        countPill.textContent = `${games.length} giochi`;
-      }catch(err){
-        countPill.textContent = 'Errore';
-        cardsEl.innerHTML = `
-          <div class="card" style="padding:14px">
-            <h2 style="margin:0 0 8px 0">Non riesco a caricare games.json</h2>
-            <p class="desc" style="margin:0">
-              Se stai aprendo index.html con doppio click (file://), alcuni browser bloccano fetch locale.
-              Soluzione: apri con un piccolo server locale oppure usa la versione “manuale” (lista hardcoded).
-            </p>
-          </div>
-        `;
-        console.error(err);
+        if (!res.ok) throw new Error('game.json non disponibile');
+        const data = await res.json();
+        sourcePill.textContent = 'Catalogo: game.json';
+        return Array.isArray(data) ? data.map(normGame) : FALLBACK_GAMES.map(normGame);
+      }catch(e){
+        sourcePill.textContent = 'Catalogo: fallback';
+        return FALLBACK_GAMES.map(normGame);
       }
     }
 
-    loadGames();
+    async function checkAvailability(g){
+      // HEAD è veloce su GitHub Pages; fallback a GET se serve.
+      try{
+        let r = await fetch(g.file, { method: 'HEAD', cache: 'no-store' });
+        if (r.status === 405) r = await fetch(g.file, { method: 'GET', cache: 'no-store' });
+        if (r.ok) return "ok";
+        if (r.status === 404) return "missing";
+        return "warn";
+      }catch{
+        return "warn";
+      }
+    }
+
+    function dotClass(av){
+      if (av === "ok") return "dot ok";
+      if (av === "missing") return "dot bad";
+      if (av === "warn") return "dot warn";
+      return "dot";
+    }
+
+    function availabilityChip(av){
+      if (av === "ok") return { label: "OK", tone: "ok" };
+      if (av === "missing") return { label: "Manca", tone: "bad" };
+      if (av === "warn") return { label: "?", tone: "warn" };
+      return { label: "…", tone: "warn" };
+    }
+
+    function cardTemplate(game, previewsOn){
+      const div = document.createElement('div');
+      div.className = 'card';
+
+      const av = availabilityChip(game.availability);
+      const tags = (game.tags ?? []).slice(0, 3);
+
+      div.innerHTML = `
+        <div class="cardTop">
+          <div>
+            <div class="titleRow">
+              <span class="${dotClass(game.availability)}" title="Stato file: ${escapeHtml(game.availability)}"></span>
+              <h2>${escapeHtml(game.title)}</h2>
+            </div>
+
+            <div class="meta">
+              <span class="chip">${escapeHtml(game.file)}</span>
+              <span class="chip">${escapeHtml(av.label)}</span>
+              ${tags.map(t => `<span class="chip">${escapeHtml(t)}</span>`).join('')}
+            </div>
+
+            ${game.desc ? `<p class="desc">${escapeHtml(game.desc)}</p>` : ``}
+          </div>
+
+          <div class="actions">
+            <a class="btn primary" href="${encodeURI(game.file)}">Apri</a>
+            <a class="btn" href="${encodeURI(game.file)}" target="_blank" rel="noopener">Nuova scheda</a>
+            <button class="btn ghost" type="button" data-action="togglePreview">Anteprima</button>
+          </div>
+        </div>
+
+        <div class="previewWrap ${previewsOn ? 'on' : ''}">
+          <div class="preview">
+            <div class="previewBadge">Anteprima</div>
+            <iframe loading="lazy" src="${encodeURI(game.file)}" title="Anteprima ${escapeHtml(game.title)}"></iframe>
+          </div>
+        </div>
+      `;
+
+      const btn = div.querySelector('[data-action="togglePreview"]');
+      const wrap = div.querySelector('.previewWrap');
+
+      btn.addEventListener('click', () => {
+        wrap.classList.toggle('on');
+      });
+
+      return div;
+    }
+
+    function matchGame(g, q){
+      if (!q) return true;
+      const hay = `${g.title} ${g.file} ${g.desc} ${(g.tags||[]).join(' ')}`.toLowerCase();
+      return hay.includes(q.toLowerCase());
+    }
+
+    function render(games){
+      const q = (searchEl.value || '').trim();
+      const previewsOn = !!togglePreviewEl.checked;
+      const showMissing = !!toggleMissingEl.checked;
+
+      const filtered = games
+        .filter(g => matchGame(g, q))
+        .filter(g => showMissing ? true : g.availability !== "missing");
+
+      cardsEl.innerHTML = '';
+      for (const g of filtered){
+        cardsEl.appendChild(cardTemplate(g, previewsOn));
+      }
+
+      countPill.textContent = `${filtered.length} giochi`;
+      emptyEl.style.display = filtered.length ? 'none' : 'block';
+    }
+
+    (async function init(){
+      // Shortcut: "/" focus search
+      window.addEventListener('keydown', (e) => {
+        if (e.key === '/' && document.activeElement !== searchEl){
+          e.preventDefault();
+          searchEl.focus();
+        }
+      });
+
+      const catalogRaw = await loadCatalog();
+
+      // Unisci catalogo + fallback (così non perdi giochi non elencati)
+      let games = uniqByFile([
+        ...catalogRaw,
+        ...FALLBACK_GAMES.map(normGame)
+      ]);
+
+      // Availability check (per scovare file mancanti tipo sudoku.html / 2054.html ecc.)
+      await Promise.all(games.map(async (g) => {
+        g.availability = await checkAvailability(g);
+      }));
+
+      // Ordine: OK prima, poi warn, poi missing; dentro alfabetico
+      const rank = { ok: 0, warn: 1, unknown: 1, missing: 2 };
+      games.sort((a,b) => {
+        const ra = rank[a.availability] ?? 1;
+        const rb = rank[b.availability] ?? 1;
+        if (ra !== rb) return ra - rb;
+        return a.title.localeCompare(b.title, 'it', { sensitivity:'base' });
+      });
+
+      // Eventi UI
+      searchEl.addEventListener('input', () => render(games));
+      togglePreviewEl.addEventListener('change', () => render(games));
+      toggleMissingEl.addEventListener('change', () => render(games));
+
+      render(games);
+    })();
   </script>
 </body>
 </html>
-
