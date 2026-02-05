@@ -1,0 +1,814 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pista a Quadrati — 2 Player</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      --border: rgba(255,255,255,.08);
+      --text:#e8ecff;
+      --muted:#a9b2da;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{box-sizing:border-box}
+    html, body{ height:100%; overscroll-behavior:none; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background:
+        radial-gradient(1000px 600px at 10% 0%, rgba(106,167,255,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(98,211,138,.12), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      font-family:var(--sans);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      overflow:hidden; /* blocca scroll pagina */
+    }
+    .app{ width:min(1100px,100%); display:grid; gap:14px; }
+    .topbar{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .title{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+    .title h1{ margin:0; font-size:18px; letter-spacing:.3px; }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      color:var(--muted);
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .controls{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    label{ font-family:var(--mono); color:var(--muted); font-size:12px; display:flex; gap:8px; align-items:center; }
+    input[type="number"]{
+      width:84px;
+      font:inherit;
+      font-family:var(--mono);
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.18);
+      color: var(--text);
+      padding:10px 12px;
+      outline:none;
+    }
+    .stats{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      font-family:var(--mono); font-size:13px;
+    }
+    .stat{
+      display:flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+    }
+    .stat b{ font-weight:900; }
+    .ok{ color:#62d38a; }
+
+    .main{
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:grid;
+      gap:12px;
+      justify-items:center;
+    }
+
+    .canvasWrap{
+      width:min(920px, 100%);
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.14);
+      overflow:hidden;
+      position:relative;
+    }
+    canvas{ width:100%; height:100%; display:block; touch-action:none; }
+
+    .hint{
+      font-family:var(--mono);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      text-align:center;
+      max-width: 920px;
+    }
+
+    .overlay{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.55);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      z-index:999;
+    }
+    .overlay.show{ display:flex; }
+    .modal{
+      width:min(560px,100%);
+      background: linear-gradient(180deg, rgba(18,26,51,.98), rgba(11,16,32,.98));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding:18px;
+    }
+    .modal h2{ margin:0 0 8px 0; font-size:18px; }
+    .modal p{ margin:0; color:var(--muted); line-height:1.35; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="title">
+        <h1>Pista a Quadrati</h1>
+        <span class="pill" id="statusPill">EDIT • Disegna pista</span>
+      </div>
+
+      <div class="controls">
+        <label>Giri per vincere:
+          <input id="lapsInput" type="number" min="1" max="99" step="1" value="3" />
+        </label>
+        <span class="pill" id="modePill">Modalità: Disegno</span>
+      </div>
+
+      <div class="stats">
+        <div class="stat">Tempo: <b id="timer">00:00</b></div>
+        <div class="stat">Rosso: <b class="ok"><span id="lapR">0</span></b>/<span id="lapTarget">3</span></div>
+        <div class="stat">Blu: <b class="ok"><span id="lapB">0</span></b>/<span id="lapTarget2">3</span></div>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="canvasWrap">
+        <canvas id="cv" aria-label="Griglia 50x50"></canvas>
+      </div>
+
+      <div class="hint">
+        EDIT: trascina col sinistro per disegnare, destro (o SHIFT) per cancellare · Premi <b>S</b> e clicca per mettere lo <b>START</b> ·
+        Premi <b>SPAZIO</b> per iniziare/fermare la gara · <b>R</b> reset auto · <b>C</b> pulisci pista.
+        <br/>
+        GARA: Rosso = WASD · Blu = Frecce · Fuori pista rallenta ma resti in gioco · In curva perdi velocità ·
+        Se tieni premuto sterzo troppo a lungo, gira meno (fatica sterzo) · Derapata con scia.
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <h2 id="modalTitle">—</h2>
+      <p id="modalText">Premi SPAZIO per tornare in EDIT e ricominciare.</p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ===== Config
+  const N = 50;
+  const SAFE_RADIUS = 3;
+
+  // Velocità generale più bassa
+  const ACCEL         = 420;   // px/s^2
+  const BRAKE         = 650;   // px/s^2
+  const BASE_TURN     = 4.6;   // rad/s base (gira bene, ma con fatica)
+  const SPEED_TURN_BONUS = 0.65;
+
+  // Attriti
+  const TRACK_DRAG    = 1.55;
+  const OFFTRACK_DRAG = 3.15;  // più alto: fuori pista non è un'autostrada
+
+  // Limiti velocità
+  const MAX_SPEED_T   = 480;
+  const MAX_SPEED_O   = 260;   // più basso fuori pista
+  const REVERSE_MAX   = 180;
+
+  // “minimo” fuori pista: piccolo, solo se stai accelerando
+  const OFFTRACK_MIN_FORWARD = 55;
+
+  // Perdita velocità in curva
+  const CURVE_SPEED_LOSS = 1.25;  // più alto => rallenta di più in curva
+  const CURVE_MIN_FACTOR = 0.65;  // non scendere oltre in un singolo secondo (stabilità)
+
+  // Fatica sterzo: più tieni premuto, meno gira
+  const STEER_FATIGUE_RATE = 1.2;   // cresce al secondo
+  const STEER_RECOVER_RATE = 1.8;   // recupera quando molli
+  const STEER_MIN_MULT = 0.45;      // minimo: gira ancora un po'
+
+  // Derapata / frizione (leggera, solo estetica + un pelo fisica)
+  const SLIP_DRAIN = 0.22;
+  const GRIP_RECOVER = 0.22;
+  const MIN_GRIP = 0.55;
+
+  // Visual: erba vs asfalto (alto contrasto)
+  const ASPHALT_1 = 'rgba(58,62,72,.97)';
+  const ASPHALT_2 = 'rgba(44,47,55,.97)';
+  const GRASS_1   = 'rgba(14,52,26,.97)';
+  const GRASS_2   = 'rgba(10,40,20,.97)';
+  const GRID_LINE = 'rgba(255,255,255,.05)';
+  const START_1   = 'rgba(255,210,143,.28)';
+  const START_2   = 'rgba(255,210,143,.14)';
+
+  // Trail
+  const trails = []; // {x1,y1,x2,y2,color,life}
+  const TRAIL_LIFE = 0.60;
+  const TRAIL_WIDTH = 2;
+
+  // ===== DOM
+  const cv = document.getElementById('cv');
+  const ctx = cv.getContext('2d');
+  const statusPill = document.getElementById('statusPill');
+  const modePill = document.getElementById('modePill');
+  const lapsInput = document.getElementById('lapsInput');
+  const lapTargetEl = document.getElementById('lapTarget');
+  const lapTargetEl2 = document.getElementById('lapTarget2');
+  const lapREl = document.getElementById('lapR');
+  const lapBEl = document.getElementById('lapB');
+  const timerEl = document.getElementById('timer');
+
+  const overlay = document.getElementById('overlay');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalText = document.getElementById('modalText');
+
+  // ===== Grid: 0 vuoto, 1 pista
+  let grid = new Uint8Array(N * N);
+  let start = null;
+
+  // Modes
+  let mode = 'edit'; // 'edit' | 'race' | 'win'
+  let setStartArmed = false;
+
+  // Canvas sizing
+  let dpr = 1;
+  let cell = 14;
+
+  // Input keys
+  const keys = new Set();
+
+  // Timer
+  let timerId = null;
+  let startMs = null;
+  let elapsedMs = 0;
+
+  // Target laps
+  let lapTarget = clampInt(parseInt(lapsInput.value || '3', 10), 1, 99);
+
+  // Cars
+  function makeCar(color, keysMap){
+    return {
+      color,
+      keysMap,
+      x: 0, y: 0,
+      a: 0,
+      v: 0,
+      lap: 0,
+      canLap: false,
+      grip: 1.0,
+      steerHold: 0,      // quanto tempo stai tenendo sterzo nella stessa direzione
+      lastSteerDir: 0,
+      prevX: 0, prevY: 0
+    };
+  }
+  const carR = makeCar('#ff5b6a', { up:'w', down:'s', left:'a', right:'d' });
+  const carB = makeCar('#6aa7ff', { up:'arrowup', down:'arrowdown', left:'arrowleft', right:'arrowright' });
+
+  // ===== Utils
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+  function clampInt(v,a,b){ v = Number.isFinite(v) ? v : a; return Math.max(a, Math.min(b, Math.floor(v))); }
+  function idx(x,y){ return y*N + x; }
+  function inBounds(x,y){ return x>=0 && y>=0 && x<N && y<N; }
+  function setStatus(t){ statusPill.textContent = t; }
+  function setModePill(t){ modePill.textContent = t; }
+
+  function formatTime(ms){
+    const total = Math.floor(ms / 1000);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+  function stopTimer(){
+    if (timerId){ clearInterval(timerId); timerId = null; }
+    startMs = null;
+  }
+  function startTimer(){
+    stopTimer();
+    startMs = Date.now();
+    timerId = setInterval(() => {
+      elapsedMs = Date.now() - startMs;
+      timerEl.textContent = formatTime(elapsedMs);
+    }, 250);
+  }
+  function resetTimer(){
+    stopTimer();
+    elapsedMs = 0;
+    timerEl.textContent = '00:00';
+  }
+
+  function cellFromPixel(px, py){
+    return [Math.floor(px / cell), Math.floor(py / cell)];
+  }
+  function pixelFromCellCenter(x,y){
+    return [(x + 0.5) * cell, (y + 0.5) * cell];
+  }
+  function onTrackAtPixel(px, py){
+    const x = Math.floor(px / cell);
+    const y = Math.floor(py / cell);
+    if (!inBounds(x,y)) return false;
+    if (start && x === start.x && y === start.y) return true;
+    return grid[idx(x,y)] === 1;
+  }
+  function distCellsCheb(x1,y1,x2,y2){
+    return Math.max(Math.abs(x1-x2), Math.abs(y1-y2));
+  }
+
+  // ===== Rendering
+  function resizeCanvas(){
+    const wrap = cv.parentElement;
+    const w = wrap.clientWidth;
+    const h = wrap.clientHeight;
+    dpr = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+    cv.width = Math.floor(w * dpr);
+    cv.height = Math.floor(h * dpr);
+    cv.style.width = w + 'px';
+    cv.style.height = h + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+
+    const s = Math.floor(Math.min(w, h) / N);
+    cell = clampInt(s, 10, 18);
+
+    draw(0);
+  }
+
+  function drawGrid(){
+    const W = cv.clientWidth;
+    const H = cv.clientHeight;
+    ctx.clearRect(0,0,W,H);
+
+    for (let y=0; y<N; y++){
+      for (let x=0; x<N; x++){
+        const isStart = start && x===start.x && y===start.y;
+        const isTrack = grid[idx(x,y)] === 1 || isStart;
+
+        const px = x * cell;
+        const py = y * cell;
+
+        if (isTrack){
+          ctx.fillStyle = isStart ? START_1 : ASPHALT_1;
+          ctx.fillRect(px, py, cell, cell);
+          ctx.fillStyle = isStart ? START_2 : ASPHALT_2;
+          ctx.fillRect(px, py + cell*0.52, cell, cell*0.48);
+        } else {
+          ctx.fillStyle = GRASS_1;
+          ctx.fillRect(px, py, cell, cell);
+          ctx.fillStyle = GRASS_2;
+          ctx.fillRect(px, py + cell*0.52, cell, cell*0.48);
+        }
+
+        ctx.strokeStyle = GRID_LINE;
+        ctx.strokeRect(px+0.5, py+0.5, cell-1, cell-1);
+      }
+    }
+
+    if (start){
+      const [cx, cy] = pixelFromCellCenter(start.x, start.y);
+      ctx.fillStyle = 'rgba(255,230,190,.92)';
+      ctx.font = `bold ${Math.max(10, Math.floor(cell*0.45))}px ${getComputedStyle(document.documentElement).getPropertyValue('--mono')}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('START', cx, cy);
+    }
+
+    if (mode === 'edit' && setStartArmed){
+      ctx.fillStyle = 'rgba(232,236,255,.85)';
+      ctx.font = `bold 12px ${getComputedStyle(document.documentElement).getPropertyValue('--mono')}`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText('S: clicca una cella per START  (ESC annulla)', 10, 10);
+    }
+  }
+
+  function drawTrails(dt){
+    for (let i=trails.length-1; i>=0; i--){
+      const t = trails[i];
+      t.life -= dt;
+      if (t.life <= 0){ trails.splice(i,1); continue; }
+      const alpha = clamp(t.life / TRAIL_LIFE, 0, 1) * 0.55;
+      ctx.strokeStyle = t.color.replace('ALPHA', alpha.toFixed(3));
+      ctx.lineWidth = TRAIL_WIDTH;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(t.x1, t.y1);
+      ctx.lineTo(t.x2, t.y2);
+      ctx.stroke();
+    }
+  }
+
+  function addTrail(car){
+    const c = car.color === '#ff5b6a'
+      ? 'rgba(255,91,106,ALPHA)'
+      : 'rgba(106,167,255,ALPHA)';
+    trails.push({ x1: car.prevX, y1: car.prevY, x2: car.x, y2: car.y, color: c, life: TRAIL_LIFE });
+    if (trails.length > 1200) trails.splice(0, trails.length - 1200);
+  }
+
+  function drawCar(car){
+    const r = Math.max(6, cell*0.28);
+    const W = cv.clientWidth, H = cv.clientHeight;
+    if (car.x < -r || car.y < -r || car.x > W+r || car.y > H+r) return;
+
+    ctx.save();
+    ctx.translate(car.x, car.y);
+    ctx.rotate(car.a);
+
+    ctx.fillStyle = car.color;
+    ctx.beginPath();
+    ctx.roundRect(-r*1.25, -r*0.82, r*2.5, r*1.64, r*0.62);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,.22)';
+    ctx.beginPath();
+    ctx.roundRect(0, -r*0.55, r*1.05, r*1.1, r*0.45);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(0,0,0,.20)';
+    ctx.beginPath();
+    ctx.arc(r*1.1, 0, r*0.22, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function draw(dt=0){
+    drawGrid();
+    if (mode === 'race' && start){
+      drawTrails(dt);
+      drawCar(carR);
+      drawCar(carB);
+    } else {
+      trails.length = 0;
+    }
+  }
+
+  if (!CanvasRenderingContext2D.prototype.roundRect){
+    CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+      r = Math.min(r, w/2, h/2);
+      this.beginPath();
+      this.moveTo(x+r, y);
+      this.arcTo(x+w, y, x+w, y+h, r);
+      this.arcTo(x+w, y+h, x, y+h, r);
+      this.arcTo(x, y+h, x, y, r);
+      this.arcTo(x, y, x+w, y, r);
+      this.closePath();
+      return this;
+    };
+  }
+
+  // ===== Editing
+  let drawing = false;
+  let drawValue = 1;
+
+  function setCellTrack(x,y,val){
+    if (!inBounds(x,y)) return;
+    grid[idx(x,y)] = val ? 1 : 0;
+  }
+  function handleEditAt(x,y){
+    if (!inBounds(x,y)) return;
+    if (setStartArmed){
+      start = {x,y};
+      setCellTrack(x,y,1);
+      setStartArmed = false;
+      setStatus('EDIT • Start impostato');
+      draw();
+      return;
+    }
+    setCellTrack(x,y, drawValue);
+    draw();
+  }
+  function pointerToLocal(e){
+    const rect = cv.getBoundingClientRect();
+    const px = (e.clientX - rect.left) * (cv.clientWidth / rect.width);
+    const py = (e.clientY - rect.top) * (cv.clientHeight / rect.height);
+    return [px,py];
+  }
+
+  cv.addEventListener('contextmenu', (e) => e.preventDefault());
+  cv.addEventListener('pointerdown', (e) => {
+    if (mode !== 'edit') return;
+    cv.setPointerCapture?.(e.pointerId);
+    const [px,py] = pointerToLocal(e);
+    const [x,y] = cellFromPixel(px,py);
+    const isErase = (e.button === 2) || e.shiftKey;
+    drawValue = isErase ? 0 : 1;
+    drawing = !setStartArmed;
+    handleEditAt(x,y);
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (mode !== 'edit') return;
+    if (!drawing) return;
+    const [px,py] = pointerToLocal(e);
+    const [x,y] = cellFromPixel(px,py);
+    handleEditAt(x,y);
+    e.preventDefault();
+  });
+  cv.addEventListener('pointerup', (e) => {
+    drawing = false;
+    e.preventDefault();
+  });
+
+  // ===== Race
+  function placeCarsOnStart(){
+    const [sx, sy] = pixelFromCellCenter(start.x, start.y);
+
+    initCar(carR, sx, sy - cell*0.18);
+    initCar(carB, sx, sy + cell*0.18);
+
+    lapREl.textContent = '0';
+    lapBEl.textContent = '0';
+    trails.length = 0;
+  }
+
+  function initCar(car, x, y){
+    car.x = x; car.y = y; car.a = 0; car.v = 0;
+    car.lap = 0; car.canLap = false;
+    car.grip = 1.0;
+    car.steerHold = 0;
+    car.lastSteerDir = 0;
+    car.prevX = car.x; car.prevY = car.y;
+  }
+
+  function startRace(){
+    if (!start){
+      setStatus('EDIT • Premi S e clicca per impostare START');
+      return;
+    }
+    lapTarget = clampInt(parseInt(lapsInput.value || '3', 10), 1, 99);
+    lapTargetEl.textContent = String(lapTarget);
+    lapTargetEl2.textContent = String(lapTarget);
+    lapsInput.disabled = true;
+
+    mode = 'race';
+    setModePill('Modalità: Gara');
+    setStatus('GARA • Via!');
+    overlay.classList.remove('show');
+
+    placeCarsOnStart();
+    resetTimer();
+    startTimer();
+
+    lastFrame = performance.now();
+    requestAnimationFrame(tick);
+    draw(0);
+  }
+
+  function stopRaceToEdit(message='EDIT • Disegna pista'){
+    mode = 'edit';
+    setModePill('Modalità: Disegno');
+    setStatus(message);
+    lapsInput.disabled = false;
+    stopTimer();
+    trails.length = 0;
+    draw(0);
+  }
+
+  function resetCars(){
+    if (!start) return;
+    placeCarsOnStart();
+    draw(0);
+  }
+
+  function clearTrack(){
+    grid.fill(0);
+    draw(0);
+  }
+
+  function carCell(car){
+    return [Math.floor(car.x / cell), Math.floor(car.y / cell)];
+  }
+
+  function updateCar(car, dt){
+    const km = car.keysMap;
+    const up = keys.has(km.up);
+    const down = keys.has(km.down);
+    const left = keys.has(km.left);
+    const right = keys.has(km.right);
+
+    car.prevX = car.x; car.prevY = car.y;
+
+    // accel / brake
+    if (up) car.v += ACCEL * dt;
+    if (down){
+      if (car.v > 8) car.v -= BRAKE * dt;
+      else car.v -= ACCEL * 0.80 * dt; // reverse
+    }
+
+    const onTrack = onTrackAtPixel(car.x, car.y);
+    const speedAbs = Math.abs(car.v);
+
+    // steering input
+    const steer = (right ? 1 : 0) - (left ? 1 : 0);
+    const steerAbs = Math.abs(steer);
+    const dir = steer === 0 ? 0 : Math.sign(steer);
+
+    // steer fatigue (more hold => less turn)
+    if (dir !== 0){
+      if (dir === car.lastSteerDir) car.steerHold += STEER_FATIGUE_RATE * dt;
+      else car.steerHold = 0; // cambio direzione: reset fatica
+      car.lastSteerDir = dir;
+    } else {
+      car.steerHold = Math.max(0, car.steerHold - STEER_RECOVER_RATE * dt);
+      car.lastSteerDir = 0;
+    }
+    const fatigueMult = clamp(1 / (1 + car.steerHold), STEER_MIN_MULT, 1.0);
+
+    // grip changes (light)
+    const grip = clamp(car.grip, MIN_GRIP, 1.0);
+
+    // turning: still good, but fatigue reduces
+    if (steer !== 0){
+      const sp = clamp(speedAbs / 240, 0.25, 1.15);
+      const turn = BASE_TURN * sp * (1 + SPEED_TURN_BONUS*(sp-0.25)) * grip * fatigueMult;
+      car.a += steer * turn * dt;
+    }
+
+    // curve speed loss: more steer + more speed => less speed
+    if (steerAbs > 0 && speedAbs > 40){
+      const spN = clamp(speedAbs / MAX_SPEED_T, 0, 1);
+      // factor per dt, clamp for stability
+      const loss = CURVE_SPEED_LOSS * steerAbs * spN;
+      const factor = clamp(1 - loss * dt, CURVE_MIN_FACTOR, 1);
+      car.v *= factor;
+    }
+
+    // drag (surface)
+    const drag = onTrack ? TRACK_DRAG : OFFTRACK_DRAG;
+    const sign = Math.sign(car.v);
+    const dv = drag * 80 * dt;
+    if (Math.abs(car.v) <= dv) car.v = 0;
+    else car.v -= sign * dv;
+
+    // clamp speed by surface
+    const maxFwd = onTrack ? MAX_SPEED_T : MAX_SPEED_O;
+    car.v = clamp(car.v, -REVERSE_MAX, maxFwd);
+
+    // min forward off-track (small), only if accelerating
+    if (!onTrack && car.v > 0){
+      const wantForward = up && !down;
+      if (wantForward) car.v = Math.max(car.v, OFFTRACK_MIN_FORWARD);
+    }
+
+    // slip/grip for trails (mostly cosmetic)
+    const slipping = (steerAbs > 0.8 && speedAbs > 220) || (car.steerHold > 0.9 && speedAbs > 240);
+    if (slipping) car.grip = clamp(car.grip - SLIP_DRAIN * dt, MIN_GRIP, 1.0);
+    else car.grip = clamp(car.grip + GRIP_RECOVER * dt, MIN_GRIP, 1.0);
+
+    // integrate position
+    car.x += Math.cos(car.a) * car.v * dt;
+    car.y += Math.sin(car.a) * car.v * dt;
+
+    // bounds with soft clamp
+    const W = N*cell, H = N*cell;
+    const pad = cell*0.25;
+    if (car.x < pad){ car.x = pad; car.v *= 0.60; }
+    if (car.y < pad){ car.y = pad; car.v *= 0.60; }
+    if (car.x > W-pad){ car.x = W-pad; car.v *= 0.60; }
+    if (car.y > H-pad){ car.y = H-pad; car.v *= 0.60; }
+
+    // trail when slipping
+    if (slipping && speedAbs > 180){
+      addTrail(car);
+    }
+  }
+
+  function updateLaps(car){
+    if (!start) return;
+    const [cx,cy] = carCell(car);
+    if (!inBounds(cx,cy)) return;
+
+    const d = distCellsCheb(cx,cy,start.x,start.y);
+    if (d >= SAFE_RADIUS) car.canLap = true;
+
+    if (car.canLap && cx === start.x && cy === start.y){
+      car.lap++;
+      car.canLap = false;
+      if (car === carR) lapREl.textContent = String(car.lap);
+      else lapBEl.textContent = String(car.lap);
+
+      if (car.lap >= lapTarget){
+        win(car === carR ? 'ROSSO' : 'BLU');
+      }
+    }
+  }
+
+  function win(who){
+    stopTimer();
+    modalTitle.textContent = `Vince ${who}!`;
+    modalText.textContent = `Tempo: ${timerEl.textContent} • Giri: ${lapTarget}`;
+    overlay.classList.add('show');
+    setStatus(`GARA • Vince ${who}`);
+    mode = 'win';
+  }
+
+  let lastFrame = 0;
+  function tick(now){
+    if (mode !== 'race') return;
+    const dt = clamp((now - lastFrame) / 1000, 0, 0.05);
+    lastFrame = now;
+
+    updateCar(carR, dt);
+    updateCar(carB, dt);
+    updateLaps(carR);
+    updateLaps(carB);
+
+    draw(dt);
+    requestAnimationFrame(tick);
+  }
+
+  // ===== Keyboard: blocca scroll
+  const BLOCK_KEYS = new Set(['arrowup','arrowdown','arrowleft','arrowright',' ']);
+  window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    keys.add(k);
+
+    if (BLOCK_KEYS.has(e.key.toLowerCase()) || ['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key)) {
+      e.preventDefault();
+    }
+
+    if (k === 'c' && mode === 'edit'){ clearTrack(); setStatus('EDIT • Pista pulita'); }
+    if (k === 'r'){ if (start) resetCars(); setStatus(mode==='race' ? 'GARA • Reset auto' : 'EDIT • Reset auto'); }
+    if (k === 's' && mode === 'edit'){ setStartArmed = true; setStatus('EDIT • Clicca una cella per START'); draw(0); }
+    if (k === 'escape' && mode === 'edit'){ setStartArmed = false; setStatus('EDIT • Disegna pista'); draw(0); }
+
+    if (e.key === ' '){
+      if (mode === 'edit') startRace();
+      else if (mode === 'race') stopRaceToEdit('EDIT • Gara fermata');
+      else if (mode === 'win'){
+        overlay.classList.remove('show');
+        stopRaceToEdit('EDIT • Vittoria registrata, ridisegna o riparti');
+      }
+    }
+  }, { passive:false });
+
+  window.addEventListener('keyup', (e) => {
+    keys.delete(e.key.toLowerCase());
+  }, { passive:true });
+
+  // blocca wheel mentre in gara
+  window.addEventListener('wheel', (e) => {
+    if (mode === 'race') e.preventDefault();
+  }, { passive:false });
+
+  // laps input update
+  lapsInput.addEventListener('input', () => {
+    const v = clampInt(parseInt(lapsInput.value || '3', 10), 1, 99);
+    lapTarget = v;
+    lapTargetEl.textContent = String(v);
+    lapTargetEl2.textContent = String(v);
+  });
+
+  // ===== Init
+  function init(){
+    lapTargetEl.textContent = String(lapTarget);
+    lapTargetEl2.textContent = String(lapTarget);
+    setModePill('Modalità: Disegno');
+    setStatus('EDIT • Disegna pista');
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // mini pista di default + start al centro (commenta se non la vuoi)
+    const cx = Math.floor(N/2), cy = Math.floor(N/2);
+    for (let y=cy-2; y<=cy+2; y++){
+      for (let x=cx-6; x<=cx+6; x++){
+        if (inBounds(x,y)) grid[idx(x,y)] = 1;
+      }
+    }
+    start = {x: cx, y: cy};
+    draw(0);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
