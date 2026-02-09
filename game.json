@@ -28,7 +28,19 @@
     "title": "Tetris",
     "file": "tetris.html",
     "desc": "Classico gioco a mattoncini, gareggia per il primo posto"
+  },
+  {
+    "title": "Galaga",
+    "file": "galaga.html",
+    "desc": "Classico arcade ma le astronavicelle sono davvero cattive"
+  },
+  {
+    "title": "Prato fiorito",
+    "file": "mines.html",
+    "desc": "Diverse difficoltà ma il solito prato fiorito"
   }
   
   
+  
 ]
+
